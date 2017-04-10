@@ -1,0 +1,31 @@
+@(title: String)(content: Html)
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>MAM02 Arden CDSS - @title</title>
+
+        <link rel='stylesheet' href='/assets/lib/bootstrap/css/bootstrap.css'>
+        <link rel="icon" type="image/png" href="/images/favicon.png">
+    </head>
+
+    <body>
+        <nav class="navbar navbar-default navbar-static-top">
+            <div class="container">
+                <div class="navbar-header">
+                    <a class="navbar-brand" href="@routes.PatientsController.list()">MAM02 Arden CDSS</a>
+                </div>
+
+                <ul class="nav navbar-nav">
+                    <li><a href="@routes.PatientsController.list()">Patient List</a></li>
+                </ul>
+            </div>
+        </nav>
+
+        <section class="container">
+            @content
+        </section>
+
+        <script src='/assets/lib/jquery/jquery.js'></script>
+        <script src='/assets/lib/bootstrap/js/tab.js'></script>
+    </body>
+</html>

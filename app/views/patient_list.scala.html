@@ -1,0 +1,33 @@
+@(patients: List[Patient])
+
+@import java.text.SimpleDateFormat;
+
+@main("Patient List") {
+    <table class="table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Date of birth</th>
+                <th>Sex</th>
+            </tr>
+        </thead>
+
+        <tbody>
+        @for(patient <- patients) {
+            <tr>
+                <td>
+                    <a href="@routes.PatientsController.details(patient.id)">@patient.id</a>
+                </td>
+
+                <td>
+                @if(patient.getDateOfBirth != null) {
+                    @(new SimpleDateFormat("d MMM y").format(patient.getDateOfBirth))
+                }
+                </td>
+
+                <td>@patient.sex</td>
+            </tr>
+        }
+        </tbody>
+    </table>
+}

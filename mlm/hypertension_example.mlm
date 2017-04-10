@@ -1,0 +1,50 @@
+maintenance:
+    title: Hypertension example;;
+    mlmname: hypertension_example;;
+    arden: Version 2.5;;
+    version: 1.0;;
+    institution: AMC Dept. of Medical Informatics;;
+    author: Roland Schermer;;
+    specialist: Roland Schermer;;
+    date: 2017-04-10;;
+    validation: testing;;
+
+library:
+    purpose: Simplified demonstration of to determine whether a patient has hypertension;;
+    explanation: n.a.;;
+    keywords: example; Arden Syntax;;
+    citations: ;;
+
+knowledge:
+    type: data_driven;;
+
+    data:
+        // Reads the latest systolic blood pressure measurement ("RRSY") for the current patient.
+        systolicBloodPressure := READ FIRST {
+            SELECT
+                sMVResult
+            FROM
+                measurement_values
+            WHERE
+                iPatientId=PATIENT_ID -- the runtime will replace PATIENT_ID with the actual patient ID
+              AND
+                sMemoCode='RRSY'
+            ORDER BY sReqDate DESC
+            LIMIT 1
+        }
+    ;;
+
+    evoke:
+        // This MLM is called directly, so no evoke statement is required.
+    ;;
+
+    logic:
+        // systolicBloodPressure has to be cast to a number because it was read as a string
+        CONCLUDE systolicBloodPressure as number > 140;
+    ;;
+
+    action:
+        WRITE "This patient has hypertension (systolic blood pressure: " || systolicBloodPressure || "mmHg)";
+    ;;
+
+end:

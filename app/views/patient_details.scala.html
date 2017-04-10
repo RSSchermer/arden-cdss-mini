@@ -1,0 +1,177 @@
+@(patient: Patient, cdssResults: services.ArdenCdssResults)
+
+@import java.text.SimpleDateFormat;
+
+@main(s"Patient ${patient.id}") {
+    <section class="row">
+        <section class="col-md-8">
+            <h1>Showing patient @patient.id</h1>
+
+            <p>
+                <strong>Date of birth:</strong>
+
+                @if(patient.getDateOfBirth != null) {
+                    @(new SimpleDateFormat("d MMM y").format(patient.getDateOfBirth))
+                }
+            </p>
+
+            <p>
+                <strong>Sex:</strong> @patient.sex
+            </p>
+
+            <ul class="nav nav-tabs" role="tablist">
+                <li role="presentation" class="active">
+                    <a href="#episodes" aria-controls="home" role="tab" data-toggle="tab">
+                        Episodes
+                    </a>
+                </li>
+
+                <li role="presentation">
+                    <a href="#prescriptions" aria-controls="profile" role="tab" data-toggle="tab">
+                        Prescriptions
+                    </a>
+                </li>
+
+                <li role="presentation">
+                    <a href="#measurements" aria-controls="messages" role="tab" data-toggle="tab">
+                        Measurements
+                    </a>
+                </li>
+            </ul>
+
+            <div class="tab-content">
+                <div role="tabpanel" class="tab-pane active" id="episodes">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Title</th>
+                                <th>ICPC code</th>
+                                <th>Start date</th>
+                                <th>End date</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                        @for(episode <- patient.episodes) {
+                            <tr>
+                                <td>@episode.title</td>
+                                <td>@episode.icpcCode</td>
+
+                                <td>
+                                @if(episode.getStartDate != null) {
+                                    @(new SimpleDateFormat("d MMM y").format(episode.getStartDate))
+                                }
+                                </td>
+
+                                <td>
+                                @if(episode.getEndDate != null) {
+                                    @(new SimpleDateFormat("d MMM y").format(episode.getEndDate))
+                                }
+                                </td>
+                            </tr>
+                        }
+                        </tbody>
+                    </table>
+                </div>
+
+                <div role="tabpanel" class="tab-pane" id="prescriptions">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Label</th>
+                                <th>Dosing code</th>
+                                <th>ATC code</th>
+                                <th>Start date</th>
+                                <th>End date</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                        @for(prescription <- patient.prescriptions) {
+                            <tr>
+                                <td>@prescription.label</td>
+                                <td>@prescription.dosingCode</td>
+                                <td>@prescription.atcCode</td>
+
+                                <td>
+                                @if(prescription.getStartDate != null) {
+                                    @(new SimpleDateFormat("d MMM y").format(prescription.getStartDate))
+                                }
+                                </td>
+
+                                <td>
+                                @if(prescription.getEndDate != null) {
+                                    @(new SimpleDateFormat("d MMM y").format(prescription.getEndDate))
+                                }
+                                </td>
+                            </tr>
+                        }
+                        </tbody>
+                    </table>
+                </div>
+
+                <div role="tabpanel" class="tab-pane" id="measurements">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Memo Code</th>
+                                <th>Lab Code</th>
+                                <th>Description</th>
+                                <th>Date</th>
+                                <th>Measured Value</th>
+                                <th>Lower limit of normal</th>
+                                <th>Higher limit of normal</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                        @for(measurement <- patient.measurements) {
+                            <tr class="@if(measurement.abnormal) { text-danger }">
+                                <td>@measurement.memoCode</td>
+                                <td>@measurement.labCode</td>
+                                <td>@measurement.description</td>
+
+                                <td>
+                                @if(measurement.getDate != null) {
+                                    @(new SimpleDateFormat("d MMM y").format(measurement.getDate))
+                                }
+                                </td>
+
+                                <td>@measurement.measuredValue</td>
+                                <td>@measurement.lowerLimitOfNormal</td>
+                                <td>@measurement.higherLimitOfNormal</td>
+                            </tr>
+                        }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <section class="well col-md-4">
+            <h2>Decision support</h2>
+
+            @if(!cdssResults.getErrors.isEmpty) {
+                <div class="text-danger">
+                    <h3 class=>Errors</h3>
+
+                    <ul>
+                    @for(error <- cdssResults.getErrors) {
+                        <li>@error</li>
+                    }
+                    </ul>
+                </div>
+            }
+
+            @if(cdssResults.getMessages.isEmpty) {
+                <p class="text-muted">No decision support messages for this patient.</p>
+            } else {
+                <ul>
+                @for(message <- cdssResults.getMessages) {
+                    <li>@message</li>
+                }
+                </ul>
+            }
+        </section>
+    </section>
+}
