@@ -1,0 +1,55 @@
+maintenance:
+    title: CHADS2 VKA Check;;
+    mlmname: chads2_vka_check;;
+    arden: Version 2.5;;
+    version: 1.0;;
+    institution: AMC Dept. of Medical Informatics;;
+    author: Roland Schermer;;
+    specialist: Roland Schermer;;
+    date: 2017-04-10;;
+    validation: testing;;
+
+library:
+    purpose: Prescribe patients with a CHADS2 score >= 2 OAC with VKAs to achieve an INR range of 2.0-3.0;;
+    explanation: n.a.;;
+    keywords: example; Arden Syntax;;
+    citations: ;;
+
+knowledge:
+    type: data_driven;;
+
+    data:
+        // Determines whether or not the patient is prescribed a vitamine K antagonist (VKA)
+        hasVka := READ EXIST {
+            SELECT
+                sATCCode
+            FROM
+                patient_prescriptions
+            WHERE
+                iPatientId=PATIENT_ID
+              AND
+                sATCCode LIKE 'B01AA%'
+        };
+
+        // Import MLMs last otherwise it doesn't work (presumably a bug in arden2bytecode)
+        // Also has to use single quotes, double quotes will not work.
+        chads2Calculator := MLM 'chads2_calc';
+    ;;
+
+    evoke:
+        // This MLM is called directly, so no evoke statement is required.
+    ;;
+
+    logic:
+        chads2Score := CALL chads2Calculator;
+
+        CONCLUDE chads2Score >= 2 AND NOT hasVka;
+    ;;
+
+    action:
+        WRITE "This patient has CHADS2 score >= 2 (CHADS2 score: " || chads2Score
+            || ") and should be prescribed oral anticoagulation therapy (OAC) with "
+            || "vitamine K antagonists (VKAs) to achieve an INR range of 2.0-3.0.";
+    ;;
+
+end:

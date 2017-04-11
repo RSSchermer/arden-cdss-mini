@@ -1,0 +1,170 @@
+maintenance:
+    title: CHADS2 Calculator;;
+    mlmname: chads2_calc;;
+    arden: Version 2.5;;
+    version: 1.0;;
+    institution: AMC Dept. of Medical Informatics;;
+    author: Roland Schermer;;
+    specialist: Roland Schermer;;
+    date: 2017-04-10;;
+    validation: testing;;
+
+library:
+    purpose: Calculates the CHADS2 score for a patient;;
+    explanation: n.a.;;
+    keywords: example; Arden Syntax;;
+    citations: ;;
+
+knowledge:
+    type: data_driven;;
+
+    data:
+        // Reads the patient's date of birth
+        dateOfBirth := READ FIRST {
+            SELECT
+                dPatBirthDate
+            FROM
+                patients
+            WHERE
+                iPatientId=PATIENT_ID
+        };
+
+        // Determines whether the patient had an episode with the partial ICPC code K77 (heart failure)
+        hasHeartFailureIcpc := READ EXIST {
+            SELECT
+                sEpisodeICPC
+            FROM
+                episodes
+            WHERE
+                iPatientId=PATIENT_ID
+              AND
+                sEpisodeICPC LIKE 'K77%'
+        };
+
+        // Determines whether the patient had an episode with ICPC code K86.00 (hypertension)
+        hasHypertensionIcpc := READ EXIST {
+            SELECT
+                sEpisodeICPC
+            FROM
+                episodes
+            WHERE
+                iPatientId=PATIENT_ID
+              AND
+                sEpisodeICPC='K86.00'
+        };
+
+        // Determines whether the patient uses any anti-hypertensives
+        hasAntiHypertensive := READ EXIST {
+            SELECT
+                sATCCode
+            FROM
+                patient_prescriptions
+            WHERE
+                iPatientId=PATIENT_ID
+              AND
+                sATCCode LIKE 'C02%'
+        };
+
+        // Reads the latest systolic blood pressure measurement ("RRSY") for the current patient.
+        latestBloodPressureSystolic := READ FIRST {
+            SELECT
+                sMVResult
+            FROM
+                measurement_values
+            WHERE
+                iPatientId=PATIENT_ID
+              AND
+                sMemoCode='RRSY'
+            ORDER BY sReqDate DESC
+            LIMIT 1
+        };
+
+        // Determines whether the patient had any episodes with the partial ICPC T90 (diabetes)
+        hasDiabetesIcpc := READ EXIST {
+           SELECT
+               sEpisodeICPC
+           FROM
+               episodes
+           WHERE
+               iPatientId=PATIENT_ID
+             AND
+               sEpisodeICPC LIKE 'T90%'
+        };
+
+        // Determines whether the patient uses any diabetes medication
+        hasDiabetesMedication := READ EXIST {
+            SELECT
+                sATCCode
+            FROM
+                patient_prescriptions
+            WHERE
+                iPatientId=PATIENT_ID
+              AND
+                sATCCode LIKE 'A10%'
+        };
+
+        // Determines whether the patient had any episodes with the partial ICPC K90 (CVA)
+        hasCvaIcpc := READ EXIST {
+            SELECT
+                sEpisodeICPC
+            FROM
+                episodes
+            WHERE
+                iPatientId=PATIENT_ID
+              AND
+                sEpisodeICPC LIKE 'K90%'
+        };
+
+        // Determines whether the patient had any episodes with the ICPC code K89.00 (TIA)
+        hasTiaIcpc := READ EXIST {
+            SELECT
+                sEpisodeICPC
+            FROM
+                episodes
+            WHERE
+                iPatientId=PATIENT_ID
+              AND
+                sEpisodeICPC='K89.00'
+        };
+    ;;
+
+    evoke:
+        // This MLM is called directly, so no evoke statement is required.
+    ;;
+
+    logic:
+        score := 0;
+
+        // The substring thing is a bit of a hack, I don't currently know of a good way to turn
+        // dateOfBirth from a STRING into a TIME type.
+        IF (SUBSTRING 10 CHARACTERS FROM STRING(now - 65 years)) > (SUBSTRING 10 CHARACTERS FROM dateOfBirth) THEN
+            score := score + 1;
+        ENDIF;
+
+        IF hasHeartFailureIcpc THEN
+            score := score + 1;
+        ENDIF;
+
+        IF hasHypertensionIcpc
+            OR hasAntiHypertensive
+            OR (latestBloodPressureSystolic as number) > 160
+        THEN
+            score := score + 1;
+        ENDIF;
+
+        IF hasDiabetesIcpc OR hasDiabetesMedication THEN
+            score := score + 1;
+        ENDIF;
+
+        IF hasCvaIcpc OR hasTiaIcpc THEN
+            score := score + 2;
+        ENDIF;
+
+        CONCLUDE TRUE;
+    ;;
+
+    action:
+        RETURN score;
+    ;;
+
+end:
