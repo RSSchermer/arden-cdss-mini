@@ -41,18 +41,7 @@ public class ArdenCdss {
     public ArdenCdssResults getResults(String patientId) {
         final File mlmDirectory = environment.getFile("mlm");
         final List<File> mlmFiles;
-        final List<String> messages = new ArrayList<>();
         final List<String> errors = new ArrayList<>();
-
-        URL[] searchUrls = new URL[1];
-
-        try {
-            searchUrls[0] = mlmDirectory.toURL();
-        } catch (MalformedURLException e) {
-            errors.add("No `mlm` directory could be found.");
-
-            return new ArdenCdssResults(new ArrayList<String>(), errors);
-        }
 
         try {
             mlmFiles = Files.walk(Paths.get(mlmDirectory.getPath()))
@@ -62,7 +51,7 @@ public class ArdenCdss {
         } catch (IOException e) {
             errors.add("No `mlm` directory could be found.");
 
-            return new ArdenCdssResults(new ArrayList<String>(), errors);
+            return new ArdenCdssResults(new ArrayList<>(), errors);
         }
 
         final List<MedicalLogicModule> compiledMlms = new ArrayList<>();
@@ -82,30 +71,40 @@ public class ArdenCdss {
             }
         }
 
+        URL[] searchUrls = new URL[2];
+
+        try {
+            searchUrls[0] = mlmDirectory.toURL();
+        } catch (MalformedURLException e) {
+            errors.add("No `mlm` directory could be found.");
+
+            return new ArdenCdssResults(new ArrayList<>(), errors);
+        }
+
+        try {
+            searchUrls[1] = environment.getFile("mlm/call").toURL();
+        } catch (MalformedURLException e) {
+            errors.add("No `mlm/call` directory could be found.");
+
+            return new ArdenCdssResults(new ArrayList<>(), errors);
+        }
+
         final Connection connection = database.getConnection();
         final ExecutionContext context = new ExecutionContext(patientId, searchUrls, connection);
 
         for (MedicalLogicModule mlm : compiledMlms) {
             try {
-                ArdenValue[] results = mlm.run(context, new ArdenValue[0], new CallTrigger());
-
-                if (results != null) {
-                    for (ArdenValue result : results) {
-                        messages.add(ArdenString.getStringFromValue(result));
-                    }
-                }
+                mlm.run(context, new ArdenValue[0], new CallTrigger());
             } catch (InvocationTargetException e) {
-                errors.add("Could not run MLM:" + e.getMessage());
+                errors.add("Could not run MLM '" + mlm.getName() +"': " + e.getCause().getMessage());
             }
         }
-
-        messages.addAll(context.getMessages());
 
         try {
             connection.close();
         } catch (SQLException ignored) {}
 
-        return new ArdenCdssResults(messages, errors);
+        return new ArdenCdssResults(context.getMessages(), errors);
     }
 
     class ExecutionContext extends BaseExecutionContext
@@ -132,7 +131,7 @@ public class ArdenCdss {
         }
 
         public void write(ArdenValue message, ArdenValue destination, double urgency) {
-            messages.add(message.toString());
+            messages.add(ArdenString.getStringFromValue(message));
         }
     }
 }
