@@ -31,8 +31,7 @@ knowledge:
                 sATCCode LIKE 'B01AA%'
         };
 
-        // Import MLMs last otherwise it doesn't work (presumably a bug in arden2bytecode)
-        // Also has to use single quotes, double quotes will not work.
+        // Has to use single quotes, double quotes will not work.
         chads2Calculator := MLM 'chads2_calc';
     ;;
 
