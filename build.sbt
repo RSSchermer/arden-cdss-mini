@@ -17,3 +17,6 @@ libraryDependencies ++= Seq(
 )
 
 PlayKeys.externalizeResources := false
+
+mappings in Universal ++= (baseDirectory.value / "db" * "*" get) map (x => x -> ("db/" + x.getName))
+mappings in Universal ++= (baseDirectory.value / "mlm" ***).get pair relativeTo(baseDirectory.value)
