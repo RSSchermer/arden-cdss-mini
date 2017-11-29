@@ -1,7 +1,7 @@
 # A mini patient record with Arden decision support
 
 Executes the decision support defined in Arden syntax `.mlm` files in the `mlm` directory
-on a sample of example patient data.
+on a sample of example patient data using [Arden2ByteCode](http://plri.github.io/arden2bytecode/).
 
 ## Building
 
