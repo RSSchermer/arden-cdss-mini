@@ -36,7 +36,7 @@ Open a terminal and type in the following commands:
 ```
 cd /path/to/where/you/extracted/the/zip
 
-bin\arden-cdss-mini
+bin/arden-cdss-mini
 
 ```
 
